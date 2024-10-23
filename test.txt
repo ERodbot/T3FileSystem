@@ -1,0 +1,26 @@
+///TEST 1
+    block block1 = {0, 511, 0, 1};
+    block block2 = {511, 1023, 1, 1};
+    block block3 = {1023, 1535, 2, 1};
+    
+    block_allocated_list test_list = {NULL, NULL, 0};
+
+    add_node(&test_list, block1.block_id);
+    add_node(&test_list, block2.block_id);
+    add_node(&test_list, block3.block_id);
+
+    printf("Block list is : %s \n total size of block is: %d", print_block_list(&test_list), test_list.size);
+    printf("head is: %d and tail is %d\n", test_list.head->block_id, test_list.tail->block_id);
+
+    printf("%d is the previus id\n", test_list.tail->prev->block_id);
+    remove_node_at_end(&test_list);
+    printf("Block list is : %s \n total size of block is: %d", print_block_list(&test_list), test_list.size);
+    printf("head is: %d and tail is %d\n", test_list.head->block_id, test_list.tail->block_id);
+
+
+    add_node(&test_list, block3.block_id);
+    replace_block_in_node(&test_list,2,3);
+    printf("Block list is : %s \n total size of block is: %d", print_block_list(&test_list), test_list.size);
+    printf("head is: %d and tail is %d\n", test_list.head->block_id, test_list.tail->block_id);
+
+
