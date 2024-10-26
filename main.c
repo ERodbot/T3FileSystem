@@ -13,11 +13,13 @@ int main()
     char *filename2 = "/root/test2.txt";
     char *error= "error";
 
-    //initialize_storage(file_system, 7, blocks);
-    initialize_file_system(drive, "file-system-test", 7200);
+
+    //Inicio del file system
+    initialize_file_system(drive, "file-system-test.txt", 7200);
     drive->usage_registry[3] = true;
 
 
+    //Tes de creacion de archivos
 
     //test para crear archivo 1
     printf("\n Archivo 1 \n");
@@ -30,6 +32,10 @@ int main()
     printf("\n");
     printf("\n Archivo Error\n");
     create_file(8000, error, drive, &files_table); 
+
+    printf("\n");
+    print_files(&files_table);
+    printf("\n");
     
     //test para crear archivo 2
     printf("\n Archivo 2 \n");
@@ -37,8 +43,8 @@ int main()
     printf("Aqui deberia imprimir los bloques del index 7: %s\n", print_block_list(files_table.table[7].file_ref->inode->file_blocks));
     printf("Aqui deberia imprimir el tamano en index 7 bien: %d END\n", files_table.table[7].file_ref->inode->size);
 
-
     printf("\n");
+
     //test de encontrar archivos 
 
     printf("\nENCONTRAR ARCHIVOS\n");
@@ -56,30 +62,30 @@ int main()
     printf("El nombre del archivo encontrado es: %s\n", fp2->filepath);
     printf("El tamano del archivo encontrado es: %d\n", fp2->inode->size);
     printf("La lista de bloques del archivo encontrado es: %s\n", print_block_list(fp2->inode->file_blocks));
-    
-    
-    print_files(&files_table);
 
+    
+    printf("\n");
+    print_files(&files_table);
+    printf("\n");
+
+
+    //Test de lectura de archivos  
+    //
+
+    read_file(filename, 0, 40, drive, &files_table);
+
+    printf("\n");
+    print_files(&files_table);
+    printf("\n");
+
+    write_file(filename, 1500, "CARTA 9 A el señor Savilles, Inglaterra", drive, &files_table);
+
+    read_file(filename, 0, 40, drive, &files_table);
 
     clean_up_storage(drive);
 
 
     
-    /*
-       int i[] = {0,1,2,3,4,5,8,9,10,11};
-       char *c;
-       c = (char*)malloc(sizeof(int)*10 * (10+2));
-
-
-       FILE *fd = fopen("test.txt", "r");
-    fseek(fd, 1, SEEK_SET);
-    printf("character is %c\n", fgetc(fd));
-    fclose(fd);
-
-    int_array_to_string(i, 10,c);
-    printf("resultado es: [%s]\n", c);
-     *
-    */
 
     return 0;
 }

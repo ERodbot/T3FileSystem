@@ -3,11 +3,13 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <string.h>
+#include <unistd.h>
+#include <fcntl.h>
 #include <math.h>
 
+#include "utils.h"
 #include "blocks.h"
 #include "inode.h"
-#include "utils.h"
 
 
 

@@ -1,6 +1,13 @@
 #ifndef UTILS
 #define UTILS
 // Function to check if a number is prime
+
+
+int is_prime(int num);
+int next_prime(int x);
+char* truncate_string(const char* input, int max_len);
+ssize_t append_to_buffer(int fd, char *buffer, size_t buffer_size, size_t *current_pos, size_t read_size, off_t file_offset);
+
 int is_prime(int num) {
     if (num <= 1) {
         return 0; // Not prime
@@ -30,4 +37,66 @@ int next_prime(int x) {
     }
     return candidate;
 }
+
+// Helper function to truncate strings that are too long
+char* truncate_string(const char* input, int max_len) {
+    int len = strlen(input);
+    if (len > max_len) {
+        char* truncated = (char*)malloc(max_len + 4); // Additional space for "..."
+        if (!truncated) return NULL;
+        strncpy(truncated, input, max_len);
+        strcpy(truncated + max_len, "...");
+        return truncated;
+    }
+    return strdup(input);
+}
+
+ssize_t append_to_buffer(int fd, char *buffer, size_t buffer_size, size_t *current_pos, size_t read_size, off_t file_offset) {
+    // Ensure there's enough space in the buffer
+    printf("\n buffer_size: %d \t, current_pos: %d \t, read_size: %d \t file_offset: %d\n", buffer_size, *current_pos, read_size, file_offset );
+    if (*current_pos + read_size > buffer_size) {
+        printf("Sin espacio suficiente\n");
+        return -1; // Not enough space in buffer to read more data
+    }
+
+    // Use buffer + current_pos to append data to the current position in the buffer
+    ssize_t bytes_read = pread(fd, buffer + *current_pos, read_size, file_offset);
+    printf("Test1\n");
+    if (bytes_read >= 0) {
+        printf("Test2\n");
+        *current_pos += bytes_read; // Update the current position in the buffer
+        printf("Total bytes read  = %d\n", *current_pos);
+    } else if (bytes_read < 0) {
+        // Handle error if pread() fails
+        perror("Error leyendo el archivo\n");
+        return -1;
+    }
+
+    return bytes_read;
+}
+
+ssize_t write_from_buffer(int fd, char *buffer, size_t buffer_size, size_t *current_pos, size_t write_size, off_t file_offset) {
+    // Ensure there's enough space in the buffer
+    printf("\n buffer_size: %d \t, current_pos: %d \t, write_size: %d \t file_offset: %d\n", buffer_size, *current_pos, write_size, file_offset );
+    if (*current_pos + write_size > buffer_size) {
+        printf("Sin espacio suficiente\n");
+        return -1; // Not enough space in buffer to read more data
+    }
+
+    // Use buffer + current_pos to append data to the current position in the buffer
+    ssize_t bytes_written = pwrite(fd, buffer + *current_pos, write_size, file_offset);
+    printf("Test1\n");
+    if (bytes_written >= 0) {
+        printf("Test2\n");
+        *current_pos += bytes_written; // Update the current position in the buffer
+        printf("Total bytes read  = %d\n", *current_pos);
+    } else if (bytes_written < 0) {
+        // Handle error if pread() fails
+        perror("Error escribiendo el archivo\n");
+        return -1;
+    }
+
+    return bytes_written;
+}
+
 #endif // !UTILS

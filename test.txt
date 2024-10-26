@@ -1,26 +1,181 @@
-///TEST 1
-    block block1 = {0, 511, 0, 1};
-    block block2 = {511, 1023, 1, 1};
-    block block3 = {1023, 1535, 2, 1};
-    
-    block_allocated_list test_list = {NULL, NULL, 0};
+CARTA 1
 
-    add_node(&test_list, block1.block_id);
-    add_node(&test_list, block2.block_id);
-    add_node(&test_list, block3.block_id);
+A la señora Saville, Inglaterra
 
-    printf("Block list is : %s \n total size of block is: %d", print_block_list(&test_list), test_list.size);
-    printf("head is: %d and tail is %d\n", test_list.head->block_id, test_list.tail->block_id);
+San Petersburgo, 11 de diciembre de 17...
 
-    printf("%d is the previus id\n", test_list.tail->prev->block_id);
-    remove_node_at_end(&test_list);
-    printf("Block list is : %s \n total size of block is: %d", print_block_list(&test_list), test_list.size);
-    printf("head is: %d and tail is %d\n", test_list.head->block_id, test_list.tail->block_id);
+Te alegrarás de saber que ningún percance ha acom-
+pañado el comienzo de la empresa que tú contemplabas
 
+con tan malos presagios. Llegué aquí ayer, y mi primera
+obligación es tranquilizar a mi querida hermana sobre mi
+bienestar y comunicarle mi creciente confianza en el éxito
+de mi empresa.
+Me encuentro ya muy al norte de Londres, y andando
+por las calles de Petersburgo noto en las mejillas una fría
 
-    add_node(&test_list, block3.block_id);
-    replace_block_in_node(&test_list,2,3);
-    printf("Block list is : %s \n total size of block is: %d", print_block_list(&test_list), test_list.size);
-    printf("head is: %d and tail is %d\n", test_list.head->block_id, test_list.tail->block_id);
+brisa norteña que azuza mis nervios j me llena de ale-
+gría. ¿Entiendes este sentimiento? Esta brisa, que viene de
 
+aquellas regiones hacia las que yo me dirijo, me anticipa
+sus climas helados. Animado por este viento prometedor,
+mis esperanzas se hacen más fervientes y reales. Intento en
+vano convencerme de que el Polo es la morada del hielo y
+la desolación. Sigo imaginándomelo como la región de la
+hermosura y el deleite. Allí, Margaret, se ve siempre el sol,
+su amplio círculo rozando justo el horizonte y difundiendo
+un perpetuo resplandor. Allí pues con tu permiso, hermana
 
+mía, concederé un margen de confianza a anteriores nave-
+gantes, allí, no existen ni la nieve ni el hielo y navegando
+
+por un mar sereno se puede arribar a una tierra que supera,
+en maravillas y hermosura, cualquier región descubierta
+hasta el momento en el mundo habitado. Puede que sus
+productos y paisaje no tengan precedente, como sin duda
+sucede con los fenómenos de los cuerpos celestes de esas
+soledades inexploradas. ¿Hay algo que pueda sorprender
+
+en un país donde la luz es eterna? Puede que allí encuen-
+tre la maravillosa fuerza que mueve la brújula; podría
+
+Frankenstein o el moderno Prometeo
+
+9
+LibrosEnRed
+
+incluso llegar a comprobar mil observaciones celestes que
+requieren sólo este viaje para deshacer para siempre sus
+aparentes contradicciones. Saciaré mi ardiente curiosidad
+viendo una parte del mundo jamás hasta ahora visitada y
+pisaré una tierra donde nunca antes ha dejado su huella
+el hombre. Estos son mis señuelos, y son suficientes para
+vencer todo temor al peligro o a la muerte e inducirme a
+emprender este laborioso viaje con el placer que siente un
+niño cuando se embarca en un bote con sus compañeros
+de vacaciones para explorar su río natal. Pero, suponiendo
+que todas estas conjeturas fueran falsas, no puedes negar
+
+el inestimable bien que podré transmitir a toda la huma-
+nidad, hasta su última generación, al descubrir, cerca del
+
+Polo, una ruta hacia aquellos países a los que actualmente
+se tarda muchos meses en llegar; o al desvelar el secreto
+del imán, para lo cual, caso de que esto sea posible, sólo se
+necesita de una empresa como la mía.
+Estos pensamientos han disipado la agitación con la
+
+que empecé mi carta y siento arder mi corazón con un entu-
+siasmo que me transporta; nada hay que tranquilice tanto
+
+la mente como un propósito claro, una meta en la cual el
+alma pueda fiar su aliento intelectual. Esta expedición ha
+
+sido el sueño predilecto de mis años jóvenes. Apasionada-
+mente he leído los relatos de los diversos viajes que se han
+
+hecho con el propósito de llegar al Océano Pacífico Norte a
+través de los mares que rodean el Polo. Quizá recuerdes que
+la totalidad de la biblioteca de nuestro buen tío Thomas
+se reducía a una historia de todos los viajes realizados con
+
+fines exploradores. Mi educación estuvo un poco descui-
+dada, pero fui un lector empedernido.
+
+Estudiaba estos volúmenes día y noche y, al familiari-
+zarme con ellos, aumentaba el pesar que sentí cuando, de
+
+niño, supe que la última voluntad de mi padre en su lecho
+de muerte prohibía a mi tío que me permitiera seguir la
+vida de marino.
+Aquellas visiones se desvanecieron cuando entré en
+contacto por primera vez con aquellos poetas cuyos versos
+llenaron mi alma y la elevaron al cielo. Me convertí en
+poeta también y viví durante un año en un paraíso de mi
+propia creación; me imaginé que yo también podría obte-
+
+Mary Shelley
+
+10
+LibrosEnRed
+
+ner un lugar allí donde se veneran los nombres de Homero
+y Shakespeare. Tú estás bien al corriente de mi fracaso y
+de cuán amargo fue para mí este desengaño. Pero justo
+
+entonces heredé la fortuna de mi primo, y, mis pensamien-
+tos retornaron a su antiguo cauce.
+
+Han pasado seis años desde que decidí llevar a cabo
+la presente empresa. Incluso ahora puedo recordar el
+momento preciso en el que decidí dedicarme a esta gran
+labor. Empecé por acostumbrar mi cuerpo a la privación.
+Acompañé a los balleneros en varias expediciones al mar
+del Norte y voluntariamente sufrí frío, hambre, sed y sueño.
+
+A menudo trabajé más durante el día que cualquier mari-
+nero, mientras dedicaba las noches al estudio de las mate-
+máticas, la teoría de la Medicina y aquellas ramas de las
+
+ciencias físicas que pensé serían de mayor utilidad práctica
+para un aventurero del mar. En dos ocasiones me enrolé
+como segundo de a bordo en un ballenero de Groenlandia
+y ambas veces salí con éxito. Debo reconocer que me sentí
+orgulloso cuando el capitán me ofreció el puesto de piloto
+en el barco y me pidió reiteradamente que me quedara ya
+
+que tanto apreciaba mis servicios. Y ahora, querida Mar-
+garet, ¿no merezco llevar a cabo alguna gran empresa?
+
+Podía haber pasado mi vida rodeado de lujo y comodidad,
+pero he preferido la gloria a cualquiera de los placeres
+que me pudiera proporcionar la riqueza. ¡Si tan sólo una
+voz, alentadora me respondiera afirmativamente! Mi valor
+y mi resolución son firmes, pero mis esperanzas fluctúan
+y mi ánimo se deprime con frecuencia. Estoy a punto de
+
+emprender un largo y difícil viaje, cuyas vicisitudes exigi-
+rán de mí todo mi valor. Se me pide no sólo que levante
+
+el ánimo de otros, sino que conserve mi entereza cuando
+ellos flaqueen.
+Esta es la época más favorable para viajar por Rusia.
+
+Vuelan sobre la nieve en sus trineos; el movimiento es agra-
+dable y, a mi modo de ver, mucho más cómodo que el de
+
+los coches de caballos ingleses. El frío no es extremado, si
+vas envuelto en pieles, atuendo que yo ya he adoptado.
+
+Hay una gran diferencia entre andar por la cubierta y per-
+manecer sentado, inmóvil durante horas, sin hacer el ejer-
+cicio que impediría que la sangre se te hiele materialmente
+
+Frankenstein o el moderno Prometeo
+
+11
+LibrosEnRed
+
+en las venas. ¡No tengo la intención de perder la vida en la
+ruta entre San Petersburgo y Arkángel.
+Partiré hacia esta última ciudad dentro de dos o tres
+semanas, y pienso fletar allí un barco, cosa que me será fácil
+si le pago el seguro al dueño; también contrataré cuantos
+
+marineros considere precisos de entre los que están acos-
+tumbrados a ir en balleneros. No pienso navegar hasta el
+
+mes de Junio; y en cuanto a mi regreso, querida hermana,
+
+¿cómo responder a esta pregunta? Si tengo éxito, pasa-
+rán muchos, muchos meses, incluso años, antes de que tú
+
+y yo nos volvamos a encontrar. Si fracaso, me verás o muy
+pronto, o nunca.
+Hasta la vista, mi querida y excelente Margaret. Que el
+cielo te envíe todas las bendiciones y a mí me proteja para
+que pueda atestiguarte una y otra vez mi gratitud por todo
+tu amor y tu bondad.
+Tu afectuoso hermano,
+
+Robert Walton

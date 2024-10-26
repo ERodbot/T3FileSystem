@@ -43,13 +43,21 @@ typedef struct {
     hashable_item_file * table;
 } hash_table_files;
 
-unsigned long hash1 (const char *key, int hash_table_size);
-unsigned long hash2 (const char *key, int hash_table_size);
-file *find_file(char *filepath, hash_table_files *hash_t);
-bool insert_into_hashtable(file *file, hash_table_files *hash_t);
-bool remove_from_hashtable(file *file, hash_table_files *hash_t);
-void print_files(hash_table_files *hash_t);
+bool create_file(int size, char *filepath, storage *file_system, hash_table_files *hash_t);
 void clean_up_file(file *file);
+file *find_file(char *filepath, hash_table_files *hash_t);
+unsigned long hash1(const char *key, int hash_table_size);
+unsigned long hash2(const char *key, int hash_table_size);
+bool initialize_file(file *new_file, char *filepath, inode *inode, hash_table_files *hash_t);
+bool initialize_file_blocks(int effective_size, storage *file_system, block_allocated_list *file_blocks);
+bool initialize_file_system(storage *storage, char *name, int size);
+bool initialize_inode(int effective_size, storage *file_system, inode *new_inode);
+bool insert_into_hashtable(file *file, hash_table_files *hash_t);
+void print_files(hash_table_files *hash_t);
+void read_file(char *filepath, int offset, size_t amount, storage *file_system, hash_table_files *hash_t);
+bool remove_from_hashtable(file *file, hash_table_files *hash_t);
+void write_file(char *filepath, int offset, char *data, storage *file_system, hash_table_files *hash_t);
+
 
 unsigned long  hash1 (const char *key, int hash_table_size){
     unsigned long hash = 5381;
@@ -68,7 +76,6 @@ unsigned long hash2 (const char *key, int hash_table_size) {
     }
     return (hash % (hash_table_size-1)) +1;
 }
-
 
 file *find_file(char *filepath, hash_table_files *hash_t) {
     unsigned long hash_1 = hash1(filepath, hash_t->size);
@@ -156,20 +163,6 @@ bool remove_from_hashtable(file *file, hash_table_files *hash_t){
     return true;
 }
 
-
-// Helper function to truncate strings that are too long
-char* truncate_string(const char* input, int max_len) {
-    int len = strlen(input);
-    if (len > max_len) {
-        char* truncated = (char*)malloc(max_len + 4); // Additional space for "..."
-        if (!truncated) return NULL;
-        strncpy(truncated, input, max_len);
-        strcpy(truncated + max_len, "...");
-        return truncated;
-    }
-    return strdup(input);
-}
-
 // Main function to print files and their associated blocks
 void print_files(hash_table_files *hash_t) {
     hashable_item_file *hash_table = hash_t->table;
@@ -212,52 +205,31 @@ void print_files(hash_table_files *hash_t) {
 //TODO cuando cmabie initialize storage, se hara la inicializacion de los bloques de memoria desde una funcion llamada internamente en vez de como parametro;
 bool initialize_file_system(storage *storage, char *name, int size){
     //inicializar archivo para simulacion de filesystem;
-    FILE * fp =fopen(name, "w");
+    FILE * fp =fopen(name, "a");
     int effective_size = (int)floor(size/BLOCK_SIZE);
     printf("Tamano efectivo de escritura/lectura: %d bloques\n", effective_size);
     fseek(fp, effective_size, SEEK_SET); 
     fputc('\0', fp);
     fclose(fp);
     //inicializar el archivo
-    initialize_storage(storage, effective_size); 
+    initialize_storage(storage, effective_size, name); 
     
     return true;
 }
 
 
 bool initialize_file_blocks(int effective_size, storage *file_system, block_allocated_list *file_blocks){
-    int c = 0;
-    block *blocks_assigned = probe_free_blocks(file_system, (int)effective_size, &c);
-    if(blocks_assigned ==NULL) {
-        printf("No se lograron asignar los bloques solicitads\n");
-        return NULL;
-    }
-    file_blocks->head = NULL;
     file_blocks->tail = NULL;
+    file_blocks->head = NULL;
     file_blocks->size = 0;
 
 
-    if (c != effective_size) {
-        return NULL;  
-    }
-
-    for (int i = 0; i < effective_size; i++) {
-        add_node(file_blocks, blocks_assigned[i].block_id);  // Add nodes to the file_blocks list
-    }
-
-    if(file_blocks->size!=effective_size) {
-        printf("No se lograron asignar los bloques solicitads\n");
-        return false;
-    }
-
-    for (int i = 0; i < effective_size; i++) {
-        file_system->usage_registry[blocks_assigned[i].block_id]=true;  // Add nodes to the file_blocks list
-    }
-
-    return true;
+    return extend_block_allocated_list(file_system, file_blocks, effective_size);
 }
 
-bool initialize_inode(int effective_size, storage *file_system, inode *new_inode) {
+bool initialize_inode(int size, storage *file_system, inode *new_inode) {
+    int effective_size= (int)ceil((float)size/BLOCK_SIZE);
+    printf("Effective size is: %d\n", effective_size);
     int i;
     block_allocated_list *file_blocks = (block_allocated_list*)malloc(sizeof(block_allocated_list));
     if(file_blocks==NULL) {
@@ -279,7 +251,7 @@ bool initialize_inode(int effective_size, storage *file_system, inode *new_inode
     // Set inode attributes
     new_inode->checksums = checksums;
     new_inode->modified = false;
-    new_inode->size = effective_size * BLOCK_SIZE;
+    new_inode->size = size;
     new_inode->created_by = USER;             
     new_inode->last_modified = SAMPLE_DATE;   
     new_inode->created_at = SAMPLE_DATE;      
@@ -307,8 +279,6 @@ bool initialize_file(file *new_file, char *filepath, inode *inode, hash_table_fi
 }
 
 bool create_file(int size, char* filepath, storage *file_system, hash_table_files *hash_t) {
-    int blocks_to_asign = (int)ceil((float)size/BLOCK_SIZE);
-    printf("Effective size is: %d\n", blocks_to_asign);
 
     char *s = strndup(filepath,strlen(filepath));
     if (s == NULL) {
@@ -322,7 +292,7 @@ bool create_file(int size, char* filepath, storage *file_system, hash_table_file
         return false;
     }
 
-    if(!initialize_inode(blocks_to_asign, file_system, file_inode)){
+    if(!initialize_inode(size, file_system, file_inode)){
         printf("No se pudo asignar memoria para crear el archivo\n");
         return false;
     }
@@ -340,10 +310,133 @@ bool create_file(int size, char* filepath, storage *file_system, hash_table_file
     return true;
 }
 
+void read_file(char *filepath, int offset, size_t amount, storage *file_system, hash_table_files *hash_t){
+     file *file_read = find_file(filepath, hash_t);
+     if (file_read==NULL){
+         printf("Error, no se pudo encontrar el archivo\n");
+         return;
+     }
+     if (file_read->inode->size < offset+amount){
+         printf("Error, no se puede leer en una posicion fuera del limite del archivo\n");
+         return;
+     }
+ 
+     off_t starting_block_position = (int)floor(offset/BLOCK_SIZE);
+     off_t starting_point_in_block =  offset - BLOCK_SIZE*starting_block_position;
+     size_t batch_size = (amount >= BLOCK_SIZE) ? BLOCK_SIZE : amount;
+     size_t total_bytes_read = 0;
+     block_node *block_node_read_currently = get_node_at_position(file_read->inode->file_blocks, starting_block_position);
+     block *block_read_currently = &file_system->memory_blocks[block_node_read_currently->block_id];
+     printf("Puntos importantes ahora son: %d para el bloque donde se inicia lectura y %d para offset de inicio desde ese bloque\n", starting_block_position, starting_point_in_block);
+ 
+     if (block_read_currently == NULL) {
+        return; 
+     }
+ 
+     char *buffer_content_read = (char*)malloc(sizeof(char)*amount + 1);
+     if (buffer_content_read==NULL){
+         printf("Error: no se pudo asignar memoria\n");
+         return;
+     }
+     
+     int fd = open(file_system->name, O_RDONLY);
+     if(fd < 0){
+         printf("Sistema de archivos corrupto, abortando \n");
+         abort();
+     }
+     
+     printf("Empezando a leer el archivo: \n");
+     while(block_node_read_currently!=NULL && (amount-total_bytes_read)!=0){
+         //append_to_buffer(int fd, char *buffer, size_t buffer_size, size_t *current_pos, size_t read_size, off_t file_offset) 
+         block_read_currently = &file_system->memory_blocks[block_node_read_currently->block_id];
+         printf("Iteracion\n");
+         if(append_to_buffer(fd, buffer_content_read, (size_t) amount + 1, &total_bytes_read, batch_size, (off_t)block_read_currently->start_offset + starting_point_in_block) < 0){
+             printf("Error leyendo el archivo, cancelando operacion");
+             return;
+         } 
+         batch_size = (amount - total_bytes_read >= BLOCK_SIZE) ? BLOCK_SIZE : (amount - total_bytes_read);
+         starting_point_in_block = 0;
+         printf("Test3\n");
+         block_node_read_currently = block_node_read_currently->next;
+ 
+         printf("Test4\n");
+     }
+ 
+     buffer_content_read[amount] = '\0';
+     printf("\n Contenido: \t %s \n", buffer_content_read);
+ 
+}
+
+
+//tener cuidado, al llamar a write en el parseo agragar el caracyer nulo en el buffer de data para que pueda ejecutar bien la funcion
+void write_file(char *filepath, int offset, char *data, storage *file_system, hash_table_files *hash_t){
+     file *file_writen = find_file(filepath, hash_t);
+     if (file_writen==NULL){
+         printf("Error, no se pudo encontrar el archivo\n");
+         return;
+     }
+     if (file_writen->inode->size < offset){
+         printf("Error, no se puede escribir en una posicion fuera del limite del archivo\n");
+         return;
+     }
+     size_t data_size = strlen(data); 
+     int surplus = (offset+data_size) - file_writen->inode->size;
+     if (surplus > 0 && data_size <= surplus){
+        if (!extend_block_allocated_list(file_system, file_writen->inode->file_blocks, (int)ceil((float)surplus / BLOCK_SIZE))) {
+            printf("Error, no se pudo extender el archivo para escribir sobre el\n");
+            return;
+        }
+        file_writen->inode->size += surplus;
+    }
+     
+     off_t starting_block_position = (int)floor(offset/BLOCK_SIZE);
+     off_t starting_point_in_block =  offset - BLOCK_SIZE*starting_block_position;
+     size_t batch_size = (data_size >= BLOCK_SIZE) ? BLOCK_SIZE : data_size;
+     size_t total_bytes_writen = 0;
+     block_node *block_node_writen_currently = get_node_at_position(file_writen->inode->file_blocks, starting_block_position);
+     block *block_writen_currently = &file_system->memory_blocks[block_node_writen_currently->block_id];
+     printf("Puntos importantes ahora son: %d para el bloque donde se inicia lectura y %d para offset de inicio desde ese bloque\n", starting_block_position, starting_point_in_block);
+ 
+     if (block_writen_currently == NULL) {
+        return; 
+     }
+     
+     int fd = open(file_system->name, O_WRONLY);
+     if(fd < 0){
+         printf("Sistema de archivos corrupto, abortando \n");
+         abort();
+     }
+     
+     printf("Empezando a leer el archivo: \n");
+     while(block_node_writen_currently!=NULL && (data_size-total_bytes_writen)!=0){
+         //append_to_buffer(int fd, char *buffer, size_t buffer_size, size_t *current_pos, size_t writen_size, off_t file_offset) 
+         block_writen_currently = &file_system->memory_blocks[block_node_writen_currently->block_id];
+         printf("Iteracion\n");
+         if(write_from_buffer(fd, data, (size_t) data_size, &total_bytes_writen, batch_size, (off_t)block_writen_currently->start_offset + starting_point_in_block) < 0){
+             printf("Error leyendo el archivo, cancelando operacion");
+             return;
+         } 
+         batch_size = (data_size - total_bytes_writen >= BLOCK_SIZE) ? BLOCK_SIZE : (data_size - total_bytes_writen);
+         starting_point_in_block = 0;
+         printf("Test3\n");
+         block_node_writen_currently = block_node_writen_currently->next;
+ 
+         printf("Test4\n");
+     }
+ 
+}
+
+
+
+
+
+
+
+
 
 
 void clean_up_file(file *file){
-
+    
 }
 
 
