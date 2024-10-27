@@ -105,7 +105,7 @@ int main()
 
     printf("\n");
 
-    write_file(filename3, 0, "@@ ESTE ES UN CAMBIO @@", drive, &files_table);
+    //write_file(filename3, 0, "@@ ESTE ES UN CAMBIO @@", drive, &files_table);
     read_file(filename3, 0, 50, drive, &files_table);
 
     file *fp3 = find_file(filename3, &files_table);

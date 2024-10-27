@@ -168,40 +168,42 @@ bool remove_from_hashtable(file *file, hash_table_files *hash_t){
 void print_files(hash_table_files *hash_t) {
     hashable_item_file *hash_table = hash_t->table;
     int i;
-    printf("\n\n╔════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════╗");
-    printf("\n║                                               Archivos del Sistema                                                         ║");
-    printf("\n╚════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════╝\n");
-    printf("╔═════╦═══════════════════════════════════════════╦═══════════════════════════════════════════════════════════════════════════╦═══════════════════╗\n");
-    printf("║  Id ║ Nombre                                    ║ Bloques Asignados                                                         ║ Tamaño del archivo║\n");
-    printf("╠═════╬═══════════════════════════════════════════╬═══════════════════════════════════════════════════════════════════════════╬═══════════════════╣\n");
+    printf("\n\n╔═══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════╗");
+    printf("\n║                                               Archivos del Sistema                                                        ║");
+    printf("\n╚═══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════╝\n");
+    printf("╔═════╦══════════════════════════════════════════╦═════════════════════════════════════════════════════╦═══════════════════╦══════════════╦══════════════════╦═════════════════════╦═════════════════════╗\n");
+    printf("║  Id ║ Nombre                                   ║ Bloques Asignados                                   ║ Tamaño en bytes   ║ Creado por   ║ Fecha de creación║ Último acceso       ║ Última modificación ║\n");
+    printf("╠═════╬══════════════════════════════════════════╬═════════════════════════════════════════════════════╬═══════════════════╬══════════════╬══════════════════╬═════════════════════╬═════════════════════╣\n");
     
     for (i = 0; i < hash_t->size; i++) {
         if (hash_table[i].flag == 1) {
             char *filepath = truncate_string(hash_table[i].file_ref->filepath, 40); // Limit filepath to 40 chars
             file *current_file = find_file(filepath, hash_t);
             block_allocated_list *printable_list = current_file->inode->file_blocks;
-            char *block_l = print_block_list(printable_list); // Assuming this function returns a string with blocks
-            
-            // Truncate block list if too long (extended to 80 characters now)
-            char *truncated_blocks = truncate_string(block_l, 80);
+            char *block_l = truncate_string(print_block_list(printable_list), 50); // Reduced block list width to 50 characters
             
             // Print formatted row with alignment
-            printf("║ %-3d ║ %-41s ║ %-73s ║ %-17d ║\n", 
+            printf("║ %-3d ║ %-40s ║ %-51s ║ %-17d ║ %-12s ║ %-16s ║ %-19s ║ %-19s ║\n", 
                    i, 
                    filepath, 
-                   truncated_blocks, 
-                   current_file->inode->size);
-            printf("╠═════╬═══════════════════════════════════════════╬═══════════════════════════════════════════════════════════════════════════╬═══════════════════╣\n");
+                   block_l, 
+                   current_file->inode->size,
+                   current_file->inode->created_by,
+                   current_file->inode->created_at,
+                   current_file->inode->last_access,
+                   current_file->inode->last_modified);
+            printf("╠═════╬══════════════════════════════════════════╬═════════════════════════════════════════════════════╬═══════════════════╬══════════════╬══════════════════╬═════════════════════╬═════════════════════╣\n");
             
             // Free allocated memory
             free(filepath);
-            free(truncated_blocks);
             free(block_l);
         }
     }
     
-    printf("╚═════╩═══════════════════════════════════════════╩═══════════════════════════════════════════════════════════════════════════╩═══════════════════╝\n");
+    printf("╚═════╩══════════════════════════════════════════╩═════════════════════════════════════════════════════╩═══════════════════╩══════════════╩══════════════════╩═════════════════════╩═════════════════════╝\n");
 }
+
+
 
 //TODO cuando cmabie initialize storage, se hara la inicializacion de los bloques de memoria desde una funcion llamada internamente en vez de como parametro;
 bool initialize_file_system(storage *storage, char *name, int size){
@@ -255,9 +257,9 @@ bool initialize_inode(int size, storage *file_system, inode *new_inode) {
     new_inode->modified = false;
     new_inode->size = size;
     new_inode->created_by = USER;             
-    new_inode->last_modified = SAMPLE_DATE;   
-    new_inode->created_at = SAMPLE_DATE;      
-    new_inode->last_access = SAMPLE_DATE;     
+    new_inode->last_modified = "No aplica";   
+    new_inode->created_at = get_current_date();      
+    new_inode->last_access = "No aplica";     
     new_inode->file_blocks = file_blocks;    
 
     return true;
@@ -364,6 +366,7 @@ void read_file(char *filepath, size_t offset, size_t amount, storage *file_syste
      buffer_content_read[amount] = '\0';
      printf("\n Contenido: \t %s \n", buffer_content_read);
  
+     file_read->inode->last_access = get_current_date();
      close(fd);
 }
 
@@ -452,6 +455,10 @@ void write_file(char *filepath, size_t offset, char *data, storage *file_system,
         // Move to the next block in the list
         current_block_node = current_block_node->next;
     }
+
+    file_written->inode->modified = true;
+    file_written->inode->last_modified = get_current_date();
+    file_written->inode->last_access = get_current_date();
 
     // Close the file descriptor after writing
     close(fd);

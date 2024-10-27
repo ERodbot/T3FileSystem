@@ -7,6 +7,7 @@
 #include <fcntl.h>
 #include <math.h>
 #include <sys/param.h>
+#include <time.h>
 #include "utils.h"
 #include "blocks.h"
 #include "inode.h"

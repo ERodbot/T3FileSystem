@@ -147,5 +147,22 @@ char * create_x_char_filled_array(int size, char x){
     return x_array;
 }
 
+char* get_current_date() {
+    // Allocate memory for the date string
+    char *date_str = (char*)malloc(11 * sizeof(char));
+    if (date_str == NULL) {
+        perror("Error allocating memory");
+        return NULL;
+    }
+
+    // Get the current time
+    time_t t = time(NULL);
+    struct tm tm = *localtime(&t);
+
+    // Format the date as "dd-mm-yyyy"
+    strftime(date_str, 11, "%d-%m-%Y", &tm);
+
+    return date_str;
+}
 
 #endif // !UTILS
