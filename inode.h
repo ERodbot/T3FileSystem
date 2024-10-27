@@ -54,9 +54,9 @@ bool initialize_file_system(storage *storage, char *name, int size);
 bool initialize_inode(int effective_size, storage *file_system, inode *new_inode);
 bool insert_into_hashtable(file *file, hash_table_files *hash_t);
 void print_files(hash_table_files *hash_t);
-void read_file(char *filepath, int offset, size_t amount, storage *file_system, hash_table_files *hash_t);
+void read_file(char *filepath, size_t offset, size_t amount, storage *file_system, hash_table_files *hash_t);
 bool remove_from_hashtable(file *file, hash_table_files *hash_t);
-void write_file(char *filepath, int offset, char *data, storage *file_system, hash_table_files *hash_t);
+void write_file(char *filepath, size_t offset, char *data, storage *file_system, hash_table_files *hash_t);
 
 
 unsigned long  hash1 (const char *key, int hash_table_size){
@@ -205,14 +205,15 @@ void print_files(hash_table_files *hash_t) {
 //TODO cuando cmabie initialize storage, se hara la inicializacion de los bloques de memoria desde una funcion llamada internamente en vez de como parametro;
 bool initialize_file_system(storage *storage, char *name, int size){
     //inicializar archivo para simulacion de filesystem;
-    FILE * fp =fopen(name, "a");
+    if(!create_and_prefill_file(name, size, ' ')){
+            return false;
+    };
     int effective_size = (int)floor(size/BLOCK_SIZE);
     printf("Tamano efectivo de escritura/lectura: %d bloques\n", effective_size);
-    fseek(fp, effective_size, SEEK_SET); 
-    fputc('\0', fp);
-    fclose(fp);
     //inicializar el archivo
-    initialize_storage(storage, effective_size, name); 
+    if(!initialize_storage(storage, effective_size, name)){
+        return false;
+    }; 
     
     return true;
 }
@@ -310,7 +311,7 @@ bool create_file(int size, char* filepath, storage *file_system, hash_table_file
     return true;
 }
 
-void read_file(char *filepath, int offset, size_t amount, storage *file_system, hash_table_files *hash_t){
+void read_file(char *filepath, size_t offset, size_t amount, storage *file_system, hash_table_files *hash_t){
      file *file_read = find_file(filepath, hash_t);
      if (file_read==NULL){
          printf("Error, no se pudo encontrar el archivo\n");
@@ -319,11 +320,10 @@ void read_file(char *filepath, int offset, size_t amount, storage *file_system, 
      if (file_read->inode->size < offset+amount){
          printf("Error, no se puede leer en una posicion fuera del limite del archivo\n");
          return;
-     }
- 
+     } 
      off_t starting_block_position = (int)floor(offset/BLOCK_SIZE);
      off_t starting_point_in_block =  offset - BLOCK_SIZE*starting_block_position;
-     size_t batch_size = (amount >= BLOCK_SIZE) ? BLOCK_SIZE : amount;
+     size_t batch_size = MIN(amount, MIN((BLOCK_SIZE - starting_point_in_block), (file_read->inode->size - offset)));
      size_t total_bytes_read = 0;
      block_node *block_node_read_currently = get_node_at_position(file_read->inode->file_blocks, starting_block_position);
      block *block_read_currently = &file_system->memory_blocks[block_node_read_currently->block_id];
@@ -342,6 +342,7 @@ void read_file(char *filepath, int offset, size_t amount, storage *file_system, 
      int fd = open(file_system->name, O_RDONLY);
      if(fd < 0){
          printf("Sistema de archivos corrupto, abortando \n");
+         close(fd);
          abort();
      }
      
@@ -349,81 +350,110 @@ void read_file(char *filepath, int offset, size_t amount, storage *file_system, 
      while(block_node_read_currently!=NULL && (amount-total_bytes_read)!=0){
          //append_to_buffer(int fd, char *buffer, size_t buffer_size, size_t *current_pos, size_t read_size, off_t file_offset) 
          block_read_currently = &file_system->memory_blocks[block_node_read_currently->block_id];
-         printf("Iteracion\n");
          if(append_to_buffer(fd, buffer_content_read, (size_t) amount + 1, &total_bytes_read, batch_size, (off_t)block_read_currently->start_offset + starting_point_in_block) < 0){
              printf("Error leyendo el archivo, cancelando operacion");
+             close(fd);
              return;
          } 
          batch_size = (amount - total_bytes_read >= BLOCK_SIZE) ? BLOCK_SIZE : (amount - total_bytes_read);
          starting_point_in_block = 0;
-         printf("Test3\n");
          block_node_read_currently = block_node_read_currently->next;
- 
-         printf("Test4\n");
      }
  
      buffer_content_read[amount] = '\0';
      printf("\n Contenido: \t %s \n", buffer_content_read);
  
+     close(fd);
+}
+
+
+
+bool extend_file(int offset, size_t data_size, file *file_written, storage*file_system){
+    int surplus = (offset + data_size) - file_written->inode->size;
+
+    int required_blocks = (int)ceil((float)(file_written->inode->size + surplus) / BLOCK_SIZE);
+    int current_blocks = file_written->inode->file_blocks->size;
+    if (surplus > 0 && required_blocks >= current_blocks) {
+        // Extend the allocated blocks if necessary
+        if (!extend_block_allocated_list(file_system, file_written->inode->file_blocks, required_blocks-current_blocks)) {
+            printf("Error, no se pudo extender el archivo para escribir sobre él\n");
+            return false;
+        }
+        printf("Se asignaron más bloques de memoria al archivo\n");
+        file_written->inode->size += surplus;
+    }
+
+    return true;
 }
 
 
 //tener cuidado, al llamar a write en el parseo agragar el caracyer nulo en el buffer de data para que pueda ejecutar bien la funcion
-void write_file(char *filepath, int offset, char *data, storage *file_system, hash_table_files *hash_t){
-     file *file_writen = find_file(filepath, hash_t);
-     if (file_writen==NULL){
-         printf("Error, no se pudo encontrar el archivo\n");
-         return;
-     }
-     if (file_writen->inode->size < offset){
-         printf("Error, no se puede escribir en una posicion fuera del limite del archivo\n");
-         return;
-     }
-     size_t data_size = strlen(data); 
-     int surplus = (offset+data_size) - file_writen->inode->size;
-     if (surplus > 0 && data_size <= surplus){
-        if (!extend_block_allocated_list(file_system, file_writen->inode->file_blocks, (int)ceil((float)surplus / BLOCK_SIZE))) {
-            printf("Error, no se pudo extender el archivo para escribir sobre el\n");
+void write_file(char *filepath, size_t offset, char *data, storage *file_system, hash_table_files *hash_t) {
+    // Locate the file in the hash table
+    file *file_written = find_file(filepath, hash_t);
+    if (file_written == NULL) {
+        printf("Error, no se pudo encontrar el archivo\n");
+        return;
+    }
+
+    // Validate the write position
+    if (file_written->inode->size < offset) {
+        printf("Error, no se puede escribir en una posición fuera del límite del archivo\n");
+        return;
+    }
+
+    // Determine the size of the data to be written
+    size_t data_size = strlen(data);
+    if (!extend_file(offset, data_size, file_written, file_system)) {
+        return;
+    }
+
+    off_t starting_block_position = (int)floor((double)offset / BLOCK_SIZE);
+    off_t starting_point_in_block = offset % BLOCK_SIZE;
+    size_t batch_size = MIN(data_size, MIN((BLOCK_SIZE - starting_point_in_block), (file_written->inode->size - offset)));
+    size_t total_bytes_written = 0;
+    block_node *current_block_node = get_node_at_position(file_written->inode->file_blocks, starting_block_position);
+    if (current_block_node == NULL) {
+        printf("Error: Bloque inicial no encontrado\n");
+        return;
+    }
+
+    block *current_block = &file_system->memory_blocks[current_block_node->block_id];
+    if (current_block == NULL) {
+        printf("Error: Bloque de memoria no encontrado\n");
+        return;
+    }
+
+    int fd = open(file_system->name, O_WRONLY);
+    if (fd < 0) {
+        printf("Sistema de archivos corrupto, abortando\n");
+        close(fd);
+        abort();
+    }
+
+    // Write data to the file in batches
+    while (current_block_node != NULL && (data_size - total_bytes_written) != 0) {
+        // Update current block
+        current_block = &file_system->memory_blocks[current_block_node->block_id];
+
+        // Write data to the file from the buffer
+        if (write_from_buffer(fd, data, data_size, &total_bytes_written, batch_size,
+                              (off_t)current_block->start_offset + starting_point_in_block) < 0) {
+            printf("Error escribiendo el archivo, cancelando operación\n");
+            close(fd);
             return;
         }
-        file_writen->inode->size += surplus;
+
+        // Calculate the next batch size and update the offset within the block
+        batch_size = MIN(data_size - total_bytes_written, BLOCK_SIZE);
+        starting_point_in_block = 0; // After the first batch, the offset within the block is zero
+
+        // Move to the next block in the list
+        current_block_node = current_block_node->next;
     }
-     
-     off_t starting_block_position = (int)floor(offset/BLOCK_SIZE);
-     off_t starting_point_in_block =  offset - BLOCK_SIZE*starting_block_position;
-     size_t batch_size = (data_size >= BLOCK_SIZE) ? BLOCK_SIZE : data_size;
-     size_t total_bytes_writen = 0;
-     block_node *block_node_writen_currently = get_node_at_position(file_writen->inode->file_blocks, starting_block_position);
-     block *block_writen_currently = &file_system->memory_blocks[block_node_writen_currently->block_id];
-     printf("Puntos importantes ahora son: %d para el bloque donde se inicia lectura y %d para offset de inicio desde ese bloque\n", starting_block_position, starting_point_in_block);
- 
-     if (block_writen_currently == NULL) {
-        return; 
-     }
-     
-     int fd = open(file_system->name, O_WRONLY);
-     if(fd < 0){
-         printf("Sistema de archivos corrupto, abortando \n");
-         abort();
-     }
-     
-     printf("Empezando a leer el archivo: \n");
-     while(block_node_writen_currently!=NULL && (data_size-total_bytes_writen)!=0){
-         //append_to_buffer(int fd, char *buffer, size_t buffer_size, size_t *current_pos, size_t writen_size, off_t file_offset) 
-         block_writen_currently = &file_system->memory_blocks[block_node_writen_currently->block_id];
-         printf("Iteracion\n");
-         if(write_from_buffer(fd, data, (size_t) data_size, &total_bytes_writen, batch_size, (off_t)block_writen_currently->start_offset + starting_point_in_block) < 0){
-             printf("Error leyendo el archivo, cancelando operacion");
-             return;
-         } 
-         batch_size = (data_size - total_bytes_writen >= BLOCK_SIZE) ? BLOCK_SIZE : (data_size - total_bytes_writen);
-         starting_point_in_block = 0;
-         printf("Test3\n");
-         block_node_writen_currently = block_node_writen_currently->next;
- 
-         printf("Test4\n");
-     }
- 
+
+    // Close the file descriptor after writing
+    close(fd);
 }
 
 

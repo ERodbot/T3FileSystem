@@ -52,8 +52,8 @@ char* truncate_string(const char* input, int max_len) {
 }
 
 ssize_t append_to_buffer(int fd, char *buffer, size_t buffer_size, size_t *current_pos, size_t read_size, off_t file_offset) {
-    // Ensure there's enough space in the buffer
-    printf("\n buffer_size: %d \t, current_pos: %d \t, read_size: %d \t file_offset: %d\n", buffer_size, *current_pos, read_size, file_offset );
+    //Ensure there's enough space in the buffer
+    //printf("\n buffer_size: %d \t, current_pos: %d \t, read_size: %d \t file_offset: %d\n", buffer_size, *current_pos, read_size, file_offset );
     if (*current_pos + read_size > buffer_size) {
         printf("Sin espacio suficiente\n");
         return -1; // Not enough space in buffer to read more data
@@ -61,11 +61,9 @@ ssize_t append_to_buffer(int fd, char *buffer, size_t buffer_size, size_t *curre
 
     // Use buffer + current_pos to append data to the current position in the buffer
     ssize_t bytes_read = pread(fd, buffer + *current_pos, read_size, file_offset);
-    printf("Test1\n");
     if (bytes_read >= 0) {
-        printf("Test2\n");
         *current_pos += bytes_read; // Update the current position in the buffer
-        printf("Total bytes read  = %d\n", *current_pos);
+        //printf("Total bytes read  = %d\n", *current_pos);
     } else if (bytes_read < 0) {
         // Handle error if pread() fails
         perror("Error leyendo el archivo\n");
@@ -77,7 +75,7 @@ ssize_t append_to_buffer(int fd, char *buffer, size_t buffer_size, size_t *curre
 
 ssize_t write_from_buffer(int fd, char *buffer, size_t buffer_size, size_t *current_pos, size_t write_size, off_t file_offset) {
     // Ensure there's enough space in the buffer
-    printf("\n buffer_size: %d \t, current_pos: %d \t, write_size: %d \t file_offset: %d\n", buffer_size, *current_pos, write_size, file_offset );
+    //printf("\n buffer_size: %d \t, current_pos: %d \t, write_size: %d \t file_offset: %d\n", buffer_size, *current_pos, write_size, file_offset );
     if (*current_pos + write_size > buffer_size) {
         printf("Sin espacio suficiente\n");
         return -1; // Not enough space in buffer to read more data
@@ -85,11 +83,9 @@ ssize_t write_from_buffer(int fd, char *buffer, size_t buffer_size, size_t *curr
 
     // Use buffer + current_pos to append data to the current position in the buffer
     ssize_t bytes_written = pwrite(fd, buffer + *current_pos, write_size, file_offset);
-    printf("Test1\n");
     if (bytes_written >= 0) {
-        printf("Test2\n");
         *current_pos += bytes_written; // Update the current position in the buffer
-        printf("Total bytes read  = %d\n", *current_pos);
+        //printf("Total bytes read  = %d\n", *current_pos);
     } else if (bytes_written < 0) {
         // Handle error if pread() fails
         perror("Error escribiendo el archivo\n");
@@ -98,5 +94,43 @@ ssize_t write_from_buffer(int fd, char *buffer, size_t buffer_size, size_t *curr
 
     return bytes_written;
 }
+
+
+bool create_and_prefill_file(const char *filename, size_t max_size, char fill_char) {
+    // Open or create the file
+    int fd = open(filename, O_WRONLY | O_CREAT | O_TRUNC, 0644);
+    if (fd < 0) {
+        perror("Error creando el archivo");
+        return false;
+    }
+
+    // Allocate a buffer to write the initial content
+    char *buffer = (char *)malloc(max_size);
+    if (buffer == NULL) {
+        perror("Error asignando memoria");
+        close(fd);
+        return false;
+    }
+
+    // Fill the buffer with the specified character
+    memset(buffer, fill_char, max_size);
+
+    // Write the buffer to the file to pre-fill it
+    ssize_t bytes_written = write(fd, buffer, max_size);
+    if (bytes_written < 0 || (size_t)bytes_written != max_size) {
+        perror("Error escribiendo en el archivo");
+        free(buffer);
+        close(fd);
+        return false;
+    }
+
+    // Clean up
+    free(buffer);
+    close(fd);
+
+
+    return true;
+}
+
 
 #endif // !UTILS

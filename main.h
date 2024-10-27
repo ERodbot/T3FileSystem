@@ -6,10 +6,12 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <math.h>
-
+#include <sys/param.h>
 #include "utils.h"
 #include "blocks.h"
 #include "inode.h"
+
+
 
 
 

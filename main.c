@@ -25,13 +25,15 @@ int main()
     printf("\n Archivo 1 \n");
     
     printf("\n Archivo 1 \n");
-    create_file(1200, filename, drive, &files_table); 
+    create_file(1023, filename, drive, &files_table); 
     printf("Aqui deberia imprimir los bloques del index 0: %s\n", print_block_list(files_table.table[0].file_ref->inode->file_blocks));
     printf("Aqui deberia imprimir el tamano en index 0 bien: %d END\n", files_table.table[0].file_ref->inode->size);
+   
     
     printf("\n");
     printf("\n Archivo Error\n");
     create_file(8000, error, drive, &files_table); 
+    
 
     printf("\n");
     print_files(&files_table);
@@ -68,19 +70,25 @@ int main()
     print_files(&files_table);
     printf("\n");
 
-
     //Test de lectura de archivos  
     //
 
-    read_file(filename, 0, 40, drive, &files_table);
+
+    write_file(filename, 0, "@@ ESTE ES UN CAMBIO @@", drive, &files_table);
+    read_file(filename, 0, 50, drive, &files_table);
+
+    write_file(filename, 51, "@@ ESTE ES UN CAMBIO NUMERO 2  @@", drive, &files_table);
+    read_file(filename, 0, 100, drive, &files_table);
+
+    char carta[] = "A la señora Saville, Inglaterra San Petersburgo, 11 de diciembre de 17... Te alegrarás de saber que ningún percance ha acompañado el comienzo de la empresa que tú contemplabas con tan malos presagios. Llegué aquí ayer, y mi primera obligación es tranquilizar a mi querida hermana sobre mi bienestar y comunicarle mi creciente confianza en el éxito de mi empresa. Me encuentro ya muy al norte de Londres, y andando por las calles de Petersburgo noto en las mejillas una fría brisa norteña que azuza mis nervios j me llena de alegría. ¿Entiendes este sentimiento? Esta brisa, que viene de aquellas regiones hacia las que yo me dirijo, me anticipa sus climas helados. Animado por este viento prometedor, mis esperanzas se hacen más fervientes y reales. Intento en vano convencerme de que el Polo es la morada del hielo y la desolación. Sigo imaginándomelo como la región de la hermosura y el deleite. Allí, Margaret, se ve siempre el sol, su amplio círculo rozando justo el horizonte y difundiendo un perpetuo resplandor. Allí pues con tu permiso, hermana mía, concederé un margen de confianza a anteriores navegantes, allí, no existen ni la nieve ni el hielo y navegando por un mar sereno se puede arribar a una tierra que supera, en maravillas y hermosura, cualquier región descubierta hasta el momento en el mundo habitado.";
+
+    write_file(filename2, 0, carta, drive, &files_table);
+    read_file(filename2, 0, 3000, drive, &files_table);
+    
 
     printf("\n");
     print_files(&files_table);
     printf("\n");
-
-    write_file(filename, 1500, "CARTA 9 A el señor Savilles, Inglaterra", drive, &files_table);
-
-    read_file(filename, 0, 40, drive, &files_table);
 
     clean_up_storage(drive);
 

@@ -138,9 +138,12 @@ block_node *get_node_at_position(block_allocated_list * allocated_blocks, int po
 
 bool extend_block_allocated_list(storage *file_system,  block_allocated_list * file_blocks, int amount) {
     int c = 0;
+    int prev_size = file_blocks->size;
     block *blocks_assigned = probe_free_blocks(file_system, amount, &c);
+    if (amount == 0) {
+        return true;
+    }
     if(blocks_assigned ==NULL) {
-        printf("No se lograron asignar los bloques solicitads\n");
         return false;
     }
 
@@ -152,8 +155,7 @@ bool extend_block_allocated_list(storage *file_system,  block_allocated_list * f
         add_node(file_blocks, blocks_assigned[i].block_id);  // Add nodes to the file_blocks list
     }
 
-    if(file_blocks->size!=amount) {
-        printf("No se lograron asignar los bloques solicitads\n");
+    if(file_blocks->size!=prev_size+amount) {
         return false;
     }
 
@@ -241,7 +243,6 @@ block *create_blocks(int amount){
 
     for (i = 0; i < amount; i++){
 
-        printf("bloque: %d, offset start: %d, offset_end: %d\n", i, offset_start, offset_end);
         block new_block = {offset_start, offset_end, i, 1};
         mem_blocks[i] = new_block;
         offset_start = offset_end +1;
@@ -263,7 +264,7 @@ block *probe_free_blocks(storage *file_system, int amount, int *c){
         return NULL;
     }
     for (i = 0; i < file_system->size && k < amount; i++) {
-
+        //printf("Uso de registro en indice: %d es : %d - %d \n", i, file_system->usage_registry[i], file_system->bad_blocks[i]);
         if (file_system->usage_registry[i] == 0 && file_system->bad_blocks[i] == 0) {
             free_blocks_taken[k] = file_system->memory_blocks[i];
             (*c)++;  
