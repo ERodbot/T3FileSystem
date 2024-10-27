@@ -39,7 +39,7 @@ void int_array_to_string(int *array, int size, char *result);
 bool initialize_storage(storage *file_system, int size, char *name);
 block *probe_free_blocks(storage *file_system, int amount, int *c);
 char *print_block_list(block_allocated_list *block_list);
-block_node *remove_node_at_end(block_allocated_list *allocated_blocks);
+void remove_node_at_end(block_allocated_list *allocated_blocks);
 block_node *replace_block_in_node(block_allocated_list *allocated_blocks, int old_block_id, int new_block_id);
 
 
@@ -68,15 +68,16 @@ void add_node(block_allocated_list *allocated_blocks, int block_id) {
     }
 }
 
-block_node *remove_node_at_end(block_allocated_list *allocated_blocks) {
+void remove_node_at_end(block_allocated_list *allocated_blocks) {
     if(allocated_blocks->head==NULL){
         printf("No existe ningun bloque, cancelando operacion de remover al final\n");
-        return NULL;
+        return;
     }
 
     if (allocated_blocks->head == allocated_blocks->tail){
-        printf("No se permite borrar el ultimo bloque de una lista si este es el unico asignado\n");
-        return NULL;
+        free(allocated_blocks->head);
+        allocated_blocks->size--;
+        return;
     }
 
     block_node *temp = allocated_blocks->tail;
@@ -84,8 +85,7 @@ block_node *remove_node_at_end(block_allocated_list *allocated_blocks) {
     allocated_blocks->tail = allocated_blocks->tail->prev;
     allocated_blocks->size--;
     temp->prev = NULL;
-    return temp;
-
+    free(temp);
 }
 
 block_node *replace_block_in_node(block_allocated_list *allocated_blocks, int old_block_id, int new_block_id) {

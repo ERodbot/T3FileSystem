@@ -1,5 +1,5 @@
 #include "main.h"
-#define STORAGE_SIZE 7200
+#define STORAGE_SIZE 14400
 #define MAX_FILES 14
 
 
@@ -11,12 +11,12 @@ int main()
     storage *drive = (storage*)malloc(sizeof(storage));
     char *filename = "/root/test.txt";
     char *filename2 = "/root/test2.txt";
+    char *filename3 = "/root/test3.txt";
     char *error= "error";
 
 
     //Inicio del file system
     initialize_file_system(drive, "file-system-test.txt", 7200);
-    drive->usage_registry[3] = true;
 
 
     //Tes de creacion de archivos
@@ -32,7 +32,7 @@ int main()
     
     printf("\n");
     printf("\n Archivo Error\n");
-    create_file(8000, error, drive, &files_table); 
+    create_file(20000, error, drive, &files_table); 
     
 
     printf("\n");
@@ -46,6 +46,7 @@ int main()
     printf("Aqui deberia imprimir el tamano en index 7 bien: %d END\n", files_table.table[7].file_ref->inode->size);
 
     printf("\n");
+
 
     //test de encontrar archivos 
 
@@ -70,9 +71,13 @@ int main()
     print_files(&files_table);
     printf("\n");
 
-    //Test de lectura de archivos  
-    //
+    printf("\n");
+    
+    printf("\n");
+    print_files(&files_table);
+    printf("\n");
 
+    //Test de lectura/escritura de archivos  
 
     write_file(filename, 0, "@@ ESTE ES UN CAMBIO @@", drive, &files_table);
     read_file(filename, 0, 50, drive, &files_table);
@@ -84,11 +89,41 @@ int main()
 
     write_file(filename2, 0, carta, drive, &files_table);
     read_file(filename2, 0, 3000, drive, &files_table);
-    
+
+    delete_file(filename, drive, &files_table);
 
     printf("\n");
     print_files(&files_table);
     printf("\n");
+    
+    
+    //test para crear archivo 3
+    printf("\n Archivo 3 \n");
+    create_file(2500, filename3, drive, &files_table); 
+    printf("Aqui deberia imprimir los bloques del index 7: %s\n", print_block_list(files_table.table[7].file_ref->inode->file_blocks));
+    printf("Aqui deberia imprimir el tamano en index 7 bien: %d END\n", files_table.table[7].file_ref->inode->size);
+
+    printf("\n");
+
+    write_file(filename3, 0, "@@ ESTE ES UN CAMBIO @@", drive, &files_table);
+    read_file(filename3, 0, 50, drive, &files_table);
+
+    file *fp3 = find_file(filename3, &files_table);
+    printf("\n Archivo 3 \n");
+    printf("El nombre del archivo encontrado es: %s\n", fp3->filepath);
+    printf("El tamano del archivo encontrado es: %d\n", fp3->inode->size);
+    printf("La lista de bloques del archivo encontrado es: %s\n", print_block_list(fp3->inode->file_blocks));
+    
+
+    create_file(1023, filename, drive, &files_table); 
+    printf("Aqui deberia imprimir los bloques del index 0: %s\n", print_block_list(files_table.table[0].file_ref->inode->file_blocks));
+    printf("Aqui deberia imprimir el tamano en index 0 bien: %d END\n", files_table.table[0].file_ref->inode->size);
+
+    printf("\n");
+    print_files(&files_table);
+    printf("\n");
+
+
 
     clean_up_storage(drive);
 

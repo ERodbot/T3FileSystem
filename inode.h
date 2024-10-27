@@ -44,7 +44,7 @@ typedef struct {
 } hash_table_files;
 
 bool create_file(int size, char *filepath, storage *file_system, hash_table_files *hash_t);
-void clean_up_file(file *file);
+void clean_up_file(file *file, storage *storage, hash_table_files *hash_t);
 file *find_file(char *filepath, hash_table_files *hash_t);
 unsigned long hash1(const char *key, int hash_table_size);
 unsigned long hash2(const char *key, int hash_table_size);
@@ -145,7 +145,7 @@ bool remove_from_hashtable(file *file, hash_table_files *hash_t){
     unsigned long hash_1 = hash1(file->filepath, hash_t->size);
     unsigned long hash_2 = hash2(file->filepath, hash_t->size);
     hashable_item_file *hash_table = hash_t->table;
-    int index = hash_1;
+    int index = (int)hash_1;
     int c = 0;
 
     while(hash_table[index].flag==1) {
@@ -154,13 +154,14 @@ bool remove_from_hashtable(file *file, hash_table_files *hash_t){
            hash_table[index].file_ref=NULL;
            hash_table[index].flag= 0;
            hash_t->current_occupied--;
+           return false;
         }
         index = (hash_1 + c* hash_2) % hash_t->size;
         c++;
     }
     
     printf("Archivo: %s no encontrado,  no se pudo remover su referencia\n", file->filepath);
-    return true;
+    return false;
 }
 
 // Main function to print files and their associated blocks
@@ -457,21 +458,45 @@ void write_file(char *filepath, size_t offset, char *data, storage *file_system,
 }
 
 
+void delete_file(char *filepath, storage *file_system, hash_table_files *hash_t){
+    file *file_deleted = find_file(filepath, hash_t);
+    if(!file_deleted){
+       return;
+    }
 
+    clean_up_file(file_deleted, file_system, hash_t);
+    if(!remove_from_hashtable(file_deleted, hash_t)){
+        return;
+    }
 
-
-
-
-
-
-
-void clean_up_file(file *file){
-    
+    free(file_deleted->filepath);
+    free(file_deleted);
+    printf("Archivo %d borrado con exito\n");
 }
 
-
-
-
+//void write_file(char *filepath, size_t offset, char *data, storage *file_system, hash_table_files *hash_t) {
+void clean_up_file(file *file, storage *file_system, hash_table_files *hash_t){
+    inode *file_inode = file->inode;
+    block_allocated_list *file_blocks  = file_inode->file_blocks;
+    block_node *temp = file_blocks->tail;
+    char *overwrite = create_x_char_filled_array(file_inode->size, ' ');
+    write_file(file->filepath, 0, overwrite, file_system, hash_t);
+        
+    while(file_blocks->size !=0 & temp!=NULL){
+        file_system->usage_registry[temp->block_id] = false;
+        temp = temp->prev;
+        remove_node_at_end(file_blocks);
+    }
+    free(file_inode->file_blocks);
+    free(file_inode->checksums);
+    free(file_inode);
+    /*
+    free(file_inode->last_access);
+    free(file_inode->created_at);
+    free(file_inode->last_modified);
+    free(file_inode->created_by);
+    */
+}
 
 
 

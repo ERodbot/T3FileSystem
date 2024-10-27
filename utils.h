@@ -133,4 +133,19 @@ bool create_and_prefill_file(const char *filename, size_t max_size, char fill_ch
 }
 
 
+char * create_x_char_filled_array(int size, char x){
+    char *x_array = (char*)malloc(sizeof(char)*size);
+
+    if(x_array==NULL){
+        return NULL;
+    }
+
+    for(int i = 0; i<size; i++){
+        x_array[i] = x;
+    }
+
+    return x_array;
+}
+
+
 #endif // !UTILS
