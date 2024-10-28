@@ -330,7 +330,7 @@ void read_file(char *filepath, size_t offset, size_t amount, storage *file_syste
      size_t total_bytes_read = 0;
      block_node *block_node_read_currently = get_node_at_position(file_read->inode->file_blocks, starting_block_position);
      block *block_read_currently = &file_system->memory_blocks[block_node_read_currently->block_id];
-     printf("Puntos importantes ahora son: %d para el bloque donde se inicia lectura y %d para offset de inicio desde ese bloque\n", starting_block_position, starting_point_in_block);
+     printf("Puntos importantes ahora son: %ld para el bloque donde se inicia lectura y %ld para offset de inicio desde ese bloque\n", starting_block_position, starting_point_in_block);
  
      if (block_read_currently == NULL) {
         return; 
@@ -478,7 +478,7 @@ void delete_file(char *filepath, storage *file_system, hash_table_files *hash_t)
 
     free(file_deleted->filepath);
     free(file_deleted);
-    printf("Archivo %d borrado con exito\n");
+    printf("Archivo borrado con exito\n");
 }
 
 //void write_file(char *filepath, size_t offset, char *data, storage *file_system, hash_table_files *hash_t) {

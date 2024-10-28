@@ -1,0 +1,40 @@
+# Create file1
+CREATE /root/test.txt 1023
+# Error when creating file
+CREATE error.txt 20000
+
+LIST
+
+# Create file2
+CREATE /root/test2.txt 3000
+
+# Write on file 1
+WRITE /root/test.txt 0 "@@ ESTE ES UN CAMBIO @@"
+# Read file 1
+READ /root/test.txt 0 50
+
+#Write on file 1
+WRITE /root/test.txt 51 "@@ ESTE ES UN CAMBIO NUMERO 2  @@"
+# Read file 1
+READ /root/test.txt 0 100
+
+LIST 
+
+WRITE /root/test2.txt 0 "A la señora Saville, Inglaterra San Petersburgo, 11 de diciembre de 17... Te alegrarás de saber que ningún percance ha acompañado el comienzo de la empresa que tú contemplabas con tan malos presagios. Llegué aquí ayer, y mi primera obligación es tranquilizar a mi querida hermana sobre mi bienestar y comunicarle mi creciente confianza en el éxito de mi empresa. Me encuentro ya muy al norte de Londres, y andando por las calles de Petersburgo noto en las mejillas una fría brisa norteña que azuza mis nervios j me llena de alegría. ¿Entiendes este sentimiento? Esta brisa, que viene de aquellas regiones hacia las que yo me dirijo, me anticipa sus climas helados. Animado por este viento prometedor, mis esperanzas se hacen más fervientes y reales. Intento en vano convencerme de que el Polo es la morada del hielo y la desolación. Sigo imaginándomelo como la región de la hermosura y el deleite. Allí, Margaret, se ve siempre el sol, su amplio círculo rozando justo el horizonte y difundiendo un perpetuo resplandor. Allí pues con tu permiso, hermana mía, concederé un margen de confianza a anteriores navegantes, allí, no existen ni la nieve ni el hielo y navegando por un mar sereno se puede arribar a una tierra que supera, en maravillas y hermosura, cualquier región descubierta hasta el momento en el mundo habitado."
+
+READ /root/test2.txt 0 3000
+
+DELETE /root/test.txt 
+
+LIST
+
+# Test para crear archivo 3
+CREATE /root/test3.txt 2500
+
+READ /root/test3.txt 0 50
+
+CREATE /root/test.txt 1023
+
+LIST
+
+
