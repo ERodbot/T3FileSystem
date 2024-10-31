@@ -555,13 +555,11 @@ bool clean_up_file(file *file, storage *file_system, hash_table_files *hash_t){
     inode *file_inode = file->inode;
     block_allocated_list *file_blocks  = file_inode->file_blocks;
     block_node *temp = file_blocks->tail;
-    printf("tamano de archivo es: %d\n", file_inode->size);
     char *overwrite = create_x_char_filled_array(file_inode->size, ' ');
     if (overwrite == NULL) {
         printf("Error asignando memoria\n");
         return false;
     }
-    printf("tamano de escritura para borrado es: %d\n", strlen(overwrite));
     write_file(file->filepath, 0, overwrite, file_system, hash_t);
         
     while(file_blocks->size !=0 & temp!=NULL){

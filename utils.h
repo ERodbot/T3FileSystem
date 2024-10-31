@@ -1,52 +1,57 @@
 #ifndef UTILS
 #define UTILS
-// Function to check if a number is prime
 
-
-int is_prime(int num);
-int next_prime(int x);
-char* truncate_string(const char* input, int max_len);
-ssize_t append_to_buffer(int fd, char *buffer, size_t buffer_size, size_t *current_pos, size_t read_size, off_t file_offset);
-ssize_t write_from_buffer(int fd, char *buffer, size_t buffer_size, size_t *current_pos, size_t write_size, off_t file_offset);
-bool create_and_prefill_file(const char *filename, size_t max_size, char fill_char);
-char* get_current_date();
-char * create_x_char_filled_array(int size, char x);
-
+// Función para verificar si un número es primo
+// Descripción: Comprueba si un número dado es primo.
+// Entrada:
+// - int num: número a verificar.
+// Salida:
+// - int: 1 si el número es primo, 0 si no lo es.
 int is_prime(int num) {
     if (num <= 1) {
-        return 0; // Not prime
+        return 0; // No es primo
     }
     if (num == 2) {
-        return 1; // 2 is the only even prime number
+        return 1; // 2 es el único número par que es primo
     }
     if (num % 2 == 0) {
-        return 0; // Other even numbers are not prime
+        return 0; // Otros números pares no son primos
     }
 
-    // Check divisibility from 3 up to the square root of the number
+    // Verifica divisibilidad desde 3 hasta la raíz cuadrada del número
     for (int i = 3; i <= sqrt(num); i += 2) {
         if (num % i == 0) {
-            return 0; // Not prime if divisible
+            return 0; // No es primo si es divisible
         }
     }
-
-    return 1; // Number is prime
+    return 1; // Es primo
 }
 
-// Function to find the nearest prime number greater than x
+// Función para encontrar el número primo más cercano mayor que x
+// Descripción: Encuentra el número primo más cercano que sea mayor a x.
+// Entrada:
+// - int x: número base para iniciar la búsqueda del siguiente primo.
+// Salida:
+// - int: número primo más cercano mayor que x.
 int next_prime(int x) {
-    int candidate = x + 1; // Start checking from the next number
+    int candidate = x + 1; // Comienza a buscar desde el siguiente número
     while (!is_prime(candidate)) {
         candidate++;
     }
     return candidate;
 }
 
-// Helper function to truncate strings that are too long
+// Función auxiliar para truncar cadenas de texto largas
+// Descripción: Trunca una cadena si su longitud excede el máximo especificado y agrega "..." al final.
+// Entrada:
+// - const char* input: cadena a truncar.
+// - int max_len: longitud máxima permitida para la cadena.
+// Salida:
+// - char*: cadena truncada con "..." al final, o una copia de la original si es más corta que max_len.
 char* truncate_string(const char* input, int max_len) {
     int len = strlen(input);
     if (len > max_len) {
-        char* truncated = (char*)malloc(max_len + 4); // Additional space for "..."
+        char* truncated = (char*)malloc(max_len + 4); // Espacio adicional para "..."
         if (!truncated) return NULL;
         strncpy(truncated, input, max_len);
         strcpy(truncated + max_len, "...");
@@ -55,21 +60,27 @@ char* truncate_string(const char* input, int max_len) {
     return strdup(input);
 }
 
+// Función para añadir contenido a un búfer desde un archivo
+// Descripción: Lee datos de un archivo y los añade al búfer en la posición actual.
+// Entrada:
+// - int fd: descriptor del archivo.
+// - char* buffer: búfer donde se almacenarán los datos leídos.
+// - size_t buffer_size: tamaño del búfer.
+// - size_t* current_pos: puntero a la posición actual en el búfer.
+// - size_t read_size: cantidad de datos a leer.
+// - off_t file_offset: offset de inicio de lectura en el archivo.
+// Salida:
+// - ssize_t: cantidad de bytes leídos, o -1 en caso de error.
 ssize_t append_to_buffer(int fd, char *buffer, size_t buffer_size, size_t *current_pos, size_t read_size, off_t file_offset) {
-    //Ensure there's enough space in the buffer
-    //printf("\n buffer_size: %d \t, current_pos: %d \t, read_size: %d \t file_offset: %d\n", buffer_size, *current_pos, read_size, file_offset );
     if (*current_pos + read_size > buffer_size) {
         printf("Sin espacio suficiente\n");
-        return -1; // Not enough space in buffer to read more data
+        return -1; // No hay suficiente espacio en el búfer
     }
 
-    // Use buffer + current_pos to append data to the current position in the buffer
     ssize_t bytes_read = pread(fd, buffer + *current_pos, read_size, file_offset);
     if (bytes_read >= 0) {
-        *current_pos += bytes_read; // Update the current position in the buffer
-        //printf("Total bytes read  = %d\n", *current_pos);
+        *current_pos += bytes_read; // Actualiza la posición actual en el búfer
     } else if (bytes_read < 0) {
-        // Handle error if pread() fails
         perror("Error leyendo el archivo\n");
         return -1;
     }
@@ -77,21 +88,27 @@ ssize_t append_to_buffer(int fd, char *buffer, size_t buffer_size, size_t *curre
     return bytes_read;
 }
 
+// Función para escribir desde un búfer a un archivo
+// Descripción: Escribe datos desde un búfer a un archivo en la posición actual.
+// Entrada:
+// - int fd: descriptor del archivo.
+// - char* buffer: búfer desde el cual se escribirán los datos.
+// - size_t buffer_size: tamaño del búfer.
+// - size_t* current_pos: puntero a la posición actual en el búfer.
+// - size_t write_size: cantidad de datos a escribir.
+// - off_t file_offset: offset de inicio de escritura en el archivo.
+// Salida:
+// - ssize_t: cantidad de bytes escritos, o -1 en caso de error.
 ssize_t write_from_buffer(int fd, char *buffer, size_t buffer_size, size_t *current_pos, size_t write_size, off_t file_offset) {
-    // Ensure there's enough space in the buffer
-    //printf("\n buffer_size: %d \t, current_pos: %d \t, write_size: %d \t file_offset: %d\n", buffer_size, *current_pos, write_size, file_offset );
     if (*current_pos + write_size > buffer_size) {
         printf("Sin espacio suficiente\n");
-        return -1; // Not enough space in buffer to read more data
+        return -1; // No hay suficiente espacio en el búfer
     }
 
-    // Use buffer + current_pos to append data to the current position in the buffer
     ssize_t bytes_written = pwrite(fd, buffer + *current_pos, write_size, file_offset);
     if (bytes_written >= 0) {
-        *current_pos += bytes_written; // Update the current position in the buffer
-        //printf("Total bytes read  = %d\n", *current_pos);
+        *current_pos += bytes_written; // Actualiza la posición actual en el búfer
     } else if (bytes_written < 0) {
-        // Handle error if pread() fails
         perror("Error escribiendo el archivo\n");
         return -1;
     }
@@ -99,16 +116,21 @@ ssize_t write_from_buffer(int fd, char *buffer, size_t buffer_size, size_t *curr
     return bytes_written;
 }
 
-
+// Función para crear y prellenar un archivo
+// Descripción: Crea un archivo con el nombre y tamaño especificado, y lo llena con un carácter dado.
+// Entrada:
+// - const char* filename: nombre del archivo a crear.
+// - size_t max_size: tamaño máximo del archivo.
+// - char fill_char: carácter con el cual se llenará el archivo.
+// Salida:
+// - bool: true si el archivo se creó y prellenó con éxito, false en caso de error.
 bool create_and_prefill_file(const char *filename, size_t max_size, char fill_char) {
-    // Open or create the file
     int fd = open(filename, O_WRONLY | O_CREAT | O_TRUNC, 0644);
     if (fd < 0) {
         perror("Error creando el archivo");
         return false;
     }
 
-    // Allocate a buffer to write the initial content
     char *buffer = (char *)malloc(max_size);
     if (buffer == NULL) {
         perror("Error asignando memoria");
@@ -116,10 +138,7 @@ bool create_and_prefill_file(const char *filename, size_t max_size, char fill_ch
         return false;
     }
 
-    // Fill the buffer with the specified character
     memset(buffer, fill_char, max_size);
-
-    // Write the buffer to the file to pre-fill it
     ssize_t bytes_written = write(fd, buffer, max_size);
     if (bytes_written < 0 || (size_t)bytes_written != max_size) {
         perror("Error escribiendo en el archivo");
@@ -128,52 +147,49 @@ bool create_and_prefill_file(const char *filename, size_t max_size, char fill_ch
         return false;
     }
 
-    // Clean up
     free(buffer);
     close(fd);
-
-
     return true;
 }
 
-
-char * create_x_char_filled_array(int size, char x){
-    printf("tamano del array dentro de la funcion es: %d\n", size);
-    char *x_array = (char*)malloc(sizeof(char)*size);
-
-
-    if(x_array==NULL){
+// Función para crear un arreglo lleno de un carácter específico
+// Descripción: Crea un arreglo del tamaño especificado y lo llena con un carácter dado.
+// Entrada:
+// - int size: tamaño del arreglo a crear.
+// - char x: carácter con el cual llenar el arreglo.
+// Salida:
+// - char*: puntero al arreglo creado, o NULL en caso de error.
+char *create_x_char_filled_array(int size, char x) {
+    char *x_array = (char*)malloc(sizeof(char) * size);
+    if (x_array == NULL) {
         return NULL;
     }
 
-    for(int i = 0; i<size-1; i++){
+    for (int i = 0; i < size - 1; i++) {
         x_array[i] = x;
     }
-    
-    x_array[size-1] = '\0';
+    x_array[size - 1] = '\0';
     return x_array;
 }
 
+// Función para obtener la fecha actual
+// Descripción: Obtiene la fecha actual en formato "dd-mm-aaaa".
+// Entrada: Ninguna.
+// Salida:
+// - char*: cadena con la fecha actual, o NULL en caso de error.
 char* get_current_date() {
-    // Allocate memory for the date string
     char *date_str = (char*)malloc(11 * sizeof(char));
     if (date_str == NULL) {
         perror("Error asignando memoria");
         return NULL;
     }
 
-    // Get the current time
     time_t t = time(NULL);
     struct tm tm = *localtime(&t);
 
-    // Format the date as "dd-mm-yyyy"
     strftime(date_str, 11, "%d-%m-%Y", &tm);
-
     return date_str;
 }
 
-
-
-
-
 #endif // !UTILS
+
