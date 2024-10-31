@@ -18,7 +18,7 @@ int main(int argc, char **argv)
     hash_table_files files_table = {next_prime(MAX_FILES), 0, files_table_frames};
     storage *drive = (storage*)malloc(sizeof(storage));
     
-    initialize_file_system(drive, "file-system-test.txt", size);
+    initialize_file_system(drive, "C", size);
     
     
     int line_count;

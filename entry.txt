@@ -1,40 +1,71 @@
-# Create file1
+# Crear archivo 1
 CREATE /root/test.txt 1023
-# Error when creating file
+
+CREATE  1023
+
+CREATE /root/test.txt 
+
+READ C:/root/test.txt 1234
+
+READ C:/root/test.txt 
+
+DELETE C:/root/test.txt
+
+WRITE C:/root/test.txt "afdfadffda"
+
+WRITE C:/root/test.txt 
+# Error al crear archivo con tamaño mayor al permitido o inexistente
 CREATE error.txt 20000
 
+# Listar archivos
 LIST
 
-# Create file2
+# Intentar borrar un archivo que no existe
+DELETE C:/root/no_file.txt 
+
+# Crear archivo 2
 CREATE /root/test2.txt 3000
 
-# Write on file 1
-WRITE /root/test.txt 0 "@@ ESTE ES UN CAMBIO @@"
-# Read file 1
-READ /root/test.txt 0 50
+# Intentar leer desde un offset fuera del rango disponible del archivo
+READ C:/root/test.txt 2000 50
 
-#Write on file 1
-WRITE /root/test.txt 51 "@@ ESTE ES UN CAMBIO NUMERO 2  @@"
-# Read file 1
-READ /root/test.txt 0 100
+# Escribir en archivo 1 (cambiando parte de su contenido dentro del rango existente)
+WRITE C:/root/test.txt 0 "@@ ESTE ES UN CAMBIO @@"
 
+# Leer el contenido modificado
+READ C:/root/test.txt 0 50
+
+# Escribir en archivo 1 para expandir su tamaño (escribiendo más allá del tamaño inicial)
+WRITE C:/root/test.txt 1020 "@@ ESTE ES UN CAMBIO QUE EXPANDE EL ARCHIVO @@"
+
+# Leer el archivo expandido
+READ C:/root/test.txt 1200 100
+
+# Intentar escribir en un offset fuera del tamaño del archivo para generar un error
+WRITE C:/root/test.txt 5000 "Este texto está fuera del límite del archivo existente."
+
+# Listar archivos nuevamente
 LIST 
 
-WRITE /root/test2.txt 0 "A la señora Saville, Inglaterra San Petersburgo, 11 de diciembre de 17... Te alegrarás de saber que ningún percance ha acompañado el comienzo de la empresa que tú contemplabas con tan malos presagios. Llegué aquí ayer, y mi primera obligación es tranquilizar a mi querida hermana sobre mi bienestar y comunicarle mi creciente confianza en el éxito de mi empresa. Me encuentro ya muy al norte de Londres, y andando por las calles de Petersburgo noto en las mejillas una fría brisa norteña que azuza mis nervios j me llena de alegría. ¿Entiendes este sentimiento? Esta brisa, que viene de aquellas regiones hacia las que yo me dirijo, me anticipa sus climas helados. Animado por este viento prometedor, mis esperanzas se hacen más fervientes y reales. Intento en vano convencerme de que el Polo es la morada del hielo y la desolación. Sigo imaginándomelo como la región de la hermosura y el deleite. Allí, Margaret, se ve siempre el sol, su amplio círculo rozando justo el horizonte y difundiendo un perpetuo resplandor. Allí pues con tu permiso, hermana mía, concederé un margen de confianza a anteriores navegantes, allí, no existen ni la nieve ni el hielo y navegando por un mar sereno se puede arribar a una tierra que supera, en maravillas y hermosura, cualquier región descubierta hasta el momento en el mundo habitado."
+# Intentar leer desde un archivo que no existe
+READ C:/root/no_file.txt 0 50
 
-READ /root/test2.txt 0 3000
+DELETE C:/root/test.txt
 
-DELETE /root/test.txt 
+READ C:/root/test.txt 0 50
 
-LIST
-
-# Test para crear archivo 3
+# Crear archivo 3 para pruebas adicionales
 CREATE /root/test3.txt 2500
 
-READ /root/test3.txt 0 50
+# Leer archivo 3 para verificar su estado inicial
+READ C:/root/test3.txt 0 50
 
+# Intentar escribir en un archivo inexistente
+WRITE C:/root/no_file.txt 0 "Texto para un archivo inexistente."
+
+# Crear nuevamente un archivo existente
 CREATE /root/test.txt 1023
 
+# Listar archivos para ver el estado final
 LIST
-
 

@@ -7,6 +7,10 @@ int is_prime(int num);
 int next_prime(int x);
 char* truncate_string(const char* input, int max_len);
 ssize_t append_to_buffer(int fd, char *buffer, size_t buffer_size, size_t *current_pos, size_t read_size, off_t file_offset);
+ssize_t write_from_buffer(int fd, char *buffer, size_t buffer_size, size_t *current_pos, size_t write_size, off_t file_offset);
+bool create_and_prefill_file(const char *filename, size_t max_size, char fill_char);
+char* get_current_date();
+char * create_x_char_filled_array(int size, char x);
 
 int is_prime(int num) {
     if (num <= 1) {
@@ -134,16 +138,19 @@ bool create_and_prefill_file(const char *filename, size_t max_size, char fill_ch
 
 
 char * create_x_char_filled_array(int size, char x){
+    printf("tamano del array dentro de la funcion es: %d\n", size);
     char *x_array = (char*)malloc(sizeof(char)*size);
+
 
     if(x_array==NULL){
         return NULL;
     }
 
-    for(int i = 0; i<size; i++){
+    for(int i = 0; i<size-1; i++){
         x_array[i] = x;
     }
-
+    
+    x_array[size-1] = '\0';
     return x_array;
 }
 
@@ -151,7 +158,7 @@ char* get_current_date() {
     // Allocate memory for the date string
     char *date_str = (char*)malloc(11 * sizeof(char));
     if (date_str == NULL) {
-        perror("Error allocating memory");
+        perror("Error asignando memoria");
         return NULL;
     }
 
@@ -164,5 +171,9 @@ char* get_current_date() {
 
     return date_str;
 }
+
+
+
+
 
 #endif // !UTILS
